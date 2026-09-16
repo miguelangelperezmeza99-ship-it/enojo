@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enciclopedia Clinica de la Ira y Simulador Somatico</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --card-bg: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --accent: #10b981;
+            --border-color: #475569;
+            
+            --lvl1: #10b981;
+            --lvl2: #f59e0b;
+            --lvl3: #f97316;
+            --lvl4: #ef4444;
+            --lvl5: #a855f7;
+        }
+
+        /* Temas Dinámicos */
+        body.theme-bosque {
+            --bg-color: #064e3b;
+            --panel-bg: #047857;
+            --card-bg: #065f46;
+            --text-main: #ecfdf5;
+            --text-muted: #a7f3d0;
+            --primary: #10b981;
+            --border-color: #059669;
+        }
+
+        body.theme-atardecer {
+            --bg-color: #4c1d95;
+            --panel-bg: #5b21b6;
+            --card-bg: #6d28d9;
+            --text-main: #f3e8ff;
+            --text-muted: #d8b4fe;
+            --primary: #f43f5e;
+            --border-color: #7c3aed;
+        }
+
+        body.theme-cyber {
+            --bg-color: #180828;
+            --panel-bg: #2b0938;
+            --card-bg: #3b0764;
+            --text-main: #00f0ff;
+            --text-muted: #f0abfc;
+            --primary: #ff007f;
+            --border-color: #a855f7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.8;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* NAVBAR FIJA */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+        }
+
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+        .btn-nav-game {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: 1px solid #60a5fa;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-nav-game:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.7);
+        }
+
+        .main-container { max-width: 1100px; margin: 90px auto 50px auto; padding: 0 20px; }
+
+        /* CONTROL DE VISIBILIDAD DE SECCIONES */
+        .page-view {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .page-view.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* ESTILOS DE TEORÍA EXTENDIDA */
+        .hero {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 50px 35px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .hero h1 { font-size: 2.5rem; color: #fff; margin-bottom: 15px; }
+        .hero p { color: var(--text-muted); font-size: 1.1rem; max-width: 850px; margin: 0 auto 30px auto; }
+
+        .btn-large-action {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 1.15rem;
+            font-weight: bold;
+            padding: 16px 36px;
+            border-radius: 50px;
+            border: 2px solid #34d399;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-large-action:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.7);
+        }
+
+        .module-block {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 35px;
+            margin-bottom: 35px;
+            border: 1px solid var(--border-color);
+        }
+
+        .module-block h2 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .module-block h3 { color: #f8fafc; margin: 20px 0 10px 0; font-size: 1.25rem; }
+        .module-block p { color: var(--text-muted); font-size: 1.02rem; margin-bottom: 15px; }
+
+        /* ESTILOS PARA LAS IMÁGENES DE TEORÍA */
+        .module-image {
+            width: 100%;
+            max-height: 380px;
+            object-fit: cover;
+            border-radius: 14px;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .split-module {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .split-module { grid-template-columns: 1fr; }
+        }
+
+        .theory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .theory-card {
+            background: var(--card-bg);
+            padding: 22px;
+            border-radius: 14px;
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .theory-card.accent { border-left-color: var(--accent); }
+
+        .theory-card h4 { color: #fff; margin-bottom: 8px; font-size: 1.1rem; }
+        .theory-card p { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 0; }
+
+        .table-section {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .table-section th, .table-section td {
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .table-section th { background: rgba(0,0,0,0.4); color: var(--primary); }
+
+        .quote-box {
+            background: var(--card-bg);
+            border-left: 5px solid var(--accent);
+            padding: 22px;
+            margin: 25px 0;
+            border-radius: 0 14px 14px 0;
+            font-style: italic;
+            color: var(--text-main);
+            font-size: 1.05rem;
+        }
+
+        .bottom-cta {
+            text-align: center;
+            background: var(--panel-bg);
+            padding: 45px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            margin-top: 50px;
+        }
+
+        /* ESTILOS DEL JUEGO */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn-back-theory {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back-theory:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .score-box {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: 2px solid var(--primary);
+            text-align: right;
+            color: #fff;
+        }
+
+        .score-box span { font-size: 1.6rem; font-weight: bold; color: #38bdf8; }
+
+        .shop-section {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .shop-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .color-preview {
+            height: 25px;
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .color-preview div { flex: 1; }
+
+        .btn-shop {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-shop:disabled { background: #64748b; cursor: not-allowed; opacity: 0.6; }
+        .btn-shop.equipped { background: #10b981; }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 25px;
+        }
+
+        @media (max-width: 880px) { .game-grid { grid-template-columns: 1fr; } }
+
+        .thermo-card {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .thermo-container {
+            width: 45px;
+            height: 250px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 25px;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse;
+            overflow: hidden;
+            border: 4px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        .thermo-fill {
+            width: 100%;
+            height: 20%;
+            background-color: var(--lvl1);
+            transition: height 0.4s ease, background-color 0.4s ease;
+        }
+
+        .btn-group { display: flex; flex-direction: column-reverse; gap: 10px; width: 100%; }
+
+        .lvl-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .b-1 { background-color: var(--lvl1); }
+        .b-2 { background-color: var(--lvl2); color: #0f172a; }
+        .b-3 { background-color: var(--lvl3); }
+        .b-4 { background-color: var(--lvl4); }
+        .b-5 { background-color: var(--lvl5); }
+
+        .game-arena {
+            background: var(--panel-bg);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .level-img-box {
+            width: 100%;
+            height: 300px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .level-img-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .minigame-box {
+            background: rgba(0,0,0,0.25);
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--primary);
+            min-height: 160px;
+        }
+
+        .breath-guide {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: #38bdf8;
+            margin: 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #0f172a;
+            transition: all 4s ease-in-out;
+            text-align: center;
+        }
+
+        .breath-expand { transform: scale(1.4); background: #34d399; }
+
+        .quiz-option {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .tap-game-area {
+            position: relative;
+            height: 140px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .stress-bubble {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVEGACIÓN FIJA -->
+<nav class="navbar">
+    <div class="logo">🧠 NeuroControl Clínico</div>
+    <button class="btn-nav-game" id="toggleViewBtn" onclick="toggleView()">🎮 Entrar al Juego</button>
+</nav>
+
+<div class="main-container">
+
+    <!-- ========================================== -->
+    <!-- VISTA 1: TEORÍA EXTENDIDA CON IMÁGENES -->
+    <!-- ========================================== -->
+    <main id="theoryView" class="page-view active">
+        <header class="hero">
+            <h1>🏛️ Tratado de Neurociencia, Psicología y Gestión Clínica de la Ira</h1>
+            <p>Explora a fondo los mecanismos celulares, cognitivos, emocionales y sistémicos que desencadenan la respuesta de ataque y descubre las estrategias validadas por evidencia científica.</p>
+            <button class="btn-large-action" onclick="showGameView()">🎮 Entrar al Arcade Emocional (Juego)</button>
+        </header>
+
+        <!-- MÓDULO 1 -->
+        <section class="module-block">
+            <h2>🔬 Módulo 1: Neurobiología Celular y Circuitos de la Ira</h2>
+            <p>La ira es una respuesta biológica altamente adaptativa de supervivencia programada en el cerebro primario para neutralizar amenazas o defender recursos. Su activación involucra un procesamiento coordinado entre múltiples estructuras subcorticales y corticales:</p>
+
+            <img class="module-image" src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=1000&auto=format&fit=crop" alt="Redes neuronales e interconexión cerebral">
+
+            <div class="theory-grid">
+                <div class="theory-card">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=400&auto=format&fit=crop" alt="Alarma rápida amígdala">
+                    <h4>1. La Amígdala y el Circuito Rápido</h4>
+                    <p>El núcleo basolateral de la amígdala recibe estimulación directa desde el tálamo en solo 12 milisegundos, activando la alarma organísmica inmediata antes del análisis consciente.</p>
+                </div>
+                <div class="theory-card">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&auto=format&fit=crop" alt="Estrés hormonal y HPA">
+                    <h4>2. Eje Hipotálamo-Hipofisario-Adrenal (HPA)</h4>
+                    <p>El hipotálamo libera CRF, estimulando la hipófisis para secretar ACTH, induciendo la producción masiva de <strong>Cortisol</strong> y <strong>Adrenalina</strong> en las glándulas suprarrenales.</p>
+                </div>
+                <div class="theory-card">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&auto=format&fit=crop" alt="Procesamiento de conflicto">
+                    <h4>3. Corteza Cingulada Anterior (ACC)</h4>
+                    <p>Funciona como un monitor de conflictos. Cuando detecta discrepancias entre expectativas y realidad, genera una señal de alarma que intensifica la valencia emocional.</p>
+                </div>
+                <div class="theory-card">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&auto=format&fit=crop" alt="Corteza Prefrontal">
+                    <h4>4. Control Inhibitorio Prefrontal</h4>
+                    <p>La corteza prefrontal dorsolateral (dlPFC) toma la vía alta cortical (~300 ms) para reinterpretar la situación y regular la intensidad de la amígdala.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 2 -->
+        <section class="module-block">
+            <h2>🧪 Módulo 2: Neuroquímica de la Respuesta Agresiva</h2>
+            <div class="split-module">
+                <div>
+                    <p>El estado interno de ira está gobernado por el equilibrio o desbalance de diversos neurotransmisores y neuromoduladores.</p>
+                    <p>Una baja concentración de neurotransmisores inhibitorios combinada con una sobreactivación dopaminérgica y noradrenérgica predispone al individuo a estallidos reactivos impulsivos e incontrolables.</p>
+                </div>
+                <img class="module-image" style="margin:0;" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop" alt="Equilibrio neuroquímico">
+            </div>
+            
+            <div class="theory-grid">
+                <div class="theory-card accent">
+                    <h4>Serotonina (5-HT)</h4>
+                    <p>Actúa como el freno sereno. Niveles bajos de serotonina en la corteza prefrontal están correlacionados clínicamente con una mayor impulsividad y agresión reactiva.</p>
+                </div>
+                <div class="theory-card accent">
+                    <h4>Dopamina</h4>
+                    <p>Alimenta la motivación orientada a la acción e hiperfocaliza la atención en el objetivo del conflicto, generando urgencia por corregir el agravio.</p>
+                </div>
+                <div class="theory-card accent">
+                    <h4>Noradrenalina</h4>
+                    <p>Aumenta el estado de alerta periférico, dilata pupilas, redirige el flujo sanguíneo a grandes masas musculares y acelera la tasa cardíaca para el combate.</p>
+                </div>
+                <div class="theory-card accent">
+                    <h4>GABA</h4>
+                    <p>El principal neurotransmisor inhibidor del SNC. Elevar los niveles de GABA promueve la hiperpolarización neuronal, reduciendo drásticamente la excitabilidad amigdalina.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 3 -->
+        <section class="module-block">
+            <h2>📈 Módulo 3: Matriz Fisiológica y Evaluación Somática</h2>
+            <p>Monitorear las señales biológicas permite intervenir antes de alcanzar la saturación del sistema nervioso simpático:</p>
+
+            <img class="module-image" src="https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1000&auto=format&fit=crop" alt="Monitoreo somático y fisiológico">
+
+            <table class="table-section">
+                <thead>
+                    <tr>
+                        <th>Nivel</th>
+                        <th>Marcadores Somáticos</th>
+                        <th>Estatus Cognitivo</th>
+                        <th>Intervención Recomendada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Calma</strong></td>
+                        <td>Frecuencia cardíaca ~60-80 BPM. Tono muscular relajado, respiración abdominal lenta.</td>
+                        <td>Acceso total a la corteza prefrontal. Pensamiento flexible, empático y reflexivo.</td>
+                        <td>Práctica proactiva de mindfulness y diario de gratitud.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Molestia</strong></td>
+                        <td>Microtensión en mandíbula o cuello. Ligera aceleración del pulso.</td>
+                        <td>Rumiación leve, pensamiento impaciente o crítico.</td>
+                        <td>Etiquetado emocional verbal y pausas conscientes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Frustración</strong></td>
+                        <td>Calor facial, rigidez articular, respiración torácica rápida.</td>
+                        <td>Sesgo de confirmación activo; pensamiento centrado únicamente en el obstáculo.</td>
+                        <td>Reencuadre cognitivo y comunicación estructurada.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Rabia</strong></td>
+                        <td>Visión en túnel, sudoración en palmas, temblor muscular, FC >110 BPM.</td>
+                        <td>Pensamiento dicotómico ("Todo o nada"). Fantasías de castigo o represalia.</td>
+                        <td>Protocolo de Tiempo Fuera e inmersión en agua fría (TIPP).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Furia</strong></td>
+                        <td>Saturación simpática total. Hipertonía muscular, pérdida de motricidad fina.</td>
+                        <td>Desconexión de la lógica ejecutiva. Impulso motor/reactivo sin evaluación de daños.</td>
+                        <td>Descarga física segura y aislamiento sensorial total.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- MÓDULO 4 -->
+        <section class="module-block">
+            <h2>🧠 Módulo 4: Psicología Cognitiva y Distorsiones de la Ira</h2>
+            <p>La Terapia Cognitivo-Conductual (TCC) demuestra que los eventos externos son neutros; lo que desencadena la ira es la evaluación cognitiva que hacemos sobre ellos.</p>
+
+            <div class="split-module">
+                <img class="module-image" style="margin:0;" src="https://images.unsplash.com/photo-1499209974431-9dac3ada00d7?w=600&auto=format&fit=crop" alt="Pensamiento y reflexión">
+                <div class="quote-box" style="margin:0;">
+                    "Las personas no se perturban por las cosas que ocurren, sino por la opinión que tienen sobre las cosas que ocurren." <br><br>— Epicteto
+                </div>
+            </div>
+
+            <div class="theory-grid">
+                <div class="theory-card">
+                    <h4>1. Exigencias Absolutistas ("Los Deberías")</h4>
+                    <p>Creencias rígidas e irrealistas sobre cómo DEBEN actuar los demás. Cuando la realidad choca contra estas reglas ficticias, surge una ira desmedida.</p>
+                </div>
+                <div class="theory-card">
+                    <h4>2. Lectura de Mente y Atribución Hostil</h4>
+                    <p>Asumir automáticamente que el descuido o la falla de otra persona fue realizado con intención maliciosa premeditada de hacernos daño.</p>
+                </div>
+                <div class="theory-card">
+                    <h4>3. Razonamiento Emocional</h4>
+                    <p>Concluir que un hecho es objetivamente catastrófico o injusto basándose únicamente en la intensidad del sentimiento interno ("Si siento tanta rabia, es porque me atacaron").</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 5 -->
+        <section class="module-block">
+            <h2>🧊 Módulo 5: Estrategias Clínicas de Desescalada (DBT & ACT)</h2>
+            <p>Técnicas basadas en la Terapia Dialéctico-Conductual y la Terapia de Aceptación y Compromiso:</p>
+
+            <h3>El Protocolo TIPP de Emergencia:</h3>
+            <div class="theory-grid">
+                <div class="theory-card accent">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&auto=format&fit=crop" alt="Agua fría TIPP">
+                    <h4>T - Temperatura Corporal</h4>
+                    <p>Sumergir el rostro en agua helada por 30 segundos activa el <em>Reflejo de Buceo del Mamífero</em>, estimulando el nervio vago y reduciendo la frecuencia cardíaca.</p>
+                </div>
+                <div class="theory-card accent">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1434682881908-b43d0467b798?w=400&auto=format&fit=crop" alt="Ejercicio físico intenso">
+                    <h4>I - Intensidad Física</h4>
+                    <p>Realizar ejercicio aeróbico de alta intensidad por 3 a 5 minutos para metabolizar el exceso de adrenalina y glucosa libres en el torrente sanguíneo.</p>
+                </div>
+                <div class="theory-card accent">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&auto=format&fit=crop" alt="Respiración guiada">
+                    <h4>P - Pauta Respiratoria</h4>
+                    <p>Exhalaciones prolongadas (ej. inhalar en 4s, mantener 7s, exhalar en 8s). La exhalación prolongada activa directamente el sistema parasimpático.</p>
+                </div>
+                <div class="theory-card accent">
+                    <img class="card-img" src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&auto=format&fit=crop" alt="Relajación muscular">
+                    <h4>P - Pare de Tensión (PMR)</h4>
+                    <p>Tensión muscular isométrica seguida de liberación consciente para revertir la hipertonía provocada por la respuesta de lucha.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 6 -->
+        <section class="module-block">
+            <h2>🗣️ Módulo 6: Algoritmo de Comunicación Asertiva</h2>
+            <p>Estructura en 4 pasos para canalizar la energía de la ira hacia la resolución eficaz de conflictos:</p>
+            
+            <img class="module-image" src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1000&auto=format&fit=crop" alt="Diálogo y comunicación asertiva">
+
+            <div class="theory-grid">
+                <div class="theory-card">
+                    <h4>1. Hecho Objetivo</h4>
+                    <p>Mencionar la conducta medible sin adjetivos peyorativos ("Cuando los informes se entregan 2 horas tarde...").</p>
+                </div>
+                <div class="theory-card">
+                    <h4>2. Impacto / Emoción</h4>
+                    <p>Hablar desde la primera persona ("Yo me siento desorganizado e impaciente...").</p>
+                </div>
+                <div class="theory-card">
+                    <h4>3. Necesidad Subyacente</h4>
+                    <p>Aclarar el valor organizacional o personal ("Necesito previsibilidad para organizar mi trabajo...").</p>
+                </div>
+                <div class="theory-card">
+                    <h4>4. Petición Concreta</h4>
+                    <p>Proponer una acción específica y realizable ("¿Podemos acordar entregas antes de las 10 AM?").</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 7 -->
+        <section class="module-block">
+            <h2>🔗 Módulo 7: Apego, Estilos Relacionales e Ira Vulnerable</h2>
+            <div class="split-module">
+                <div>
+                    <p>La psicología profunda reconoce que la ira suele actuar como una <strong>emoción secundaria</strong> encargada de proteger vivencias primarias más vulnerables como el dolor, la vergüenza, el rechazo o el miedo al abandono.</p>
+                    <ul>
+                        <li><strong>Estilo de Apego Ansioso:</strong> Utiliza la ira hiperactivada como una estrategia de protesta para demandar atención y reconexión ante la amenaza de distanciamiento.</li>
+                        <li><strong>Estilo de Apego Evitativo:</strong> Utiliza la ira desactivadora o el distanciamiento frío para proteger su autonomía cuando percibe vulneración de sus límites.</li>
+                    </ul>
+                </div>
+                <img class="module-image" style="margin:0;" src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=600&auto=format&fit=crop" alt="Vulnerabilidad y apego">
+            </div>
+        </section>
+
+        <!-- MÓDULO 8 -->
+        <section class="module-block">
+            <h2>🌿 Módulo 8: Mantenimiento Sistémico e Higiene Neuronal</h2>
+            <p>Variables biológicas fundamentales para mantener un umbral elevado de tolerancia a la frustración:</p>
+
+            <img class="module-image" src="https://images.unsplash.com/photo-1511295742362-92c96b124e52?w=1000&auto=format&fit=crop" alt="Descanso e higiene del sueño">
+
+            <ul>
+                <li><strong>Sueño REM y No-REM:</strong> La privación de sueño debilita en un 60% la conectividad top-down entre la corteza prefrontal y el sistema límbico.</li>
+                <li><strong>Glucemia Estable:</strong> Los picos e hipoglucemias severas activan respuestas de adrenalina para liberar glucógeno, aumentando la irritabilidad.</li>
+                <li><strong>Pausas Micro-Restaurativas:</strong> Introducir momentos de baja estimulación sensorial durante la jornada laboral evita la saturación por carga alostática.</li>
+            </ul>
+        </section>
+
+        <!-- CALL TO ACTION FINAL -->
+        <div class="bottom-cta">
+            <h2>¿Has asimilado la teoría?</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px;">Ingresa ahora al simulador para practicar los protocolos de autorregulación somática en tiempo real.</p>
+            <button class="btn-large-action" onclick="showGameView()">🎮 Entrar al Arcade Emocional</button>
+        </div>
+    </main>
+
+
+    <!-- ========================================== -->
+    <!-- VISTA 2: EL JUEGO (ESCONDIDO POR DEFECTO) -->
+    <!-- ========================================== -->
+    <main id="gameView" class="page-view">
+        <div class="game-header">
+            <div>
+                <h1>🎮 Arcade Emocional: El Juego</h1>
+                <p style="color: var(--text-muted);">Aplica las técnicas de desescalada y entrena tu regulación somática.</p>
+            </div>
+            <button class="btn-back-theory" onclick="showTheoryView()">📚 Volver a la Teoría</button>
+        </div>
+
+        <div class="score-box">
+            Puntos de Calma (XP): <br><span id="xpDisplay">0 XP</span>
+        </div>
+
+        <div class="shop-section">
+            <h3>🛍️ Tienda de Personalización Visual</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Gana XP completando ejercicios para cambiar el tema de la aplicación.</p>
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+
+        <div class="game-grid">
+            <div class="thermo-card">
+                <h3>Nivel de Ira</h3>
+                <p style="color: var(--text-muted); font-size:0.8rem;">Selecciona el nivel:</p>
+
+                <div class="thermo-container">
+                    <div class="thermo-fill" id="thermoFill"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="lvl-btn b-5" onclick="selectLevel(5)">Nivel 5 <span>💥 Furia</span></button>
+                    <button class="lvl-btn b-4" onclick="selectLevel(4)">Nivel 4 <span>😡 Rabia</span></button>
+                    <button class="lvl-btn b-3" onclick="selectLevel(3)">Nivel 3 <span>😠 Frustración</span></button>
+                    <button class="lvl-btn b-2" onclick="selectLevel(2)">Nivel 2 <span>🟡 Molestia</span></button>
+                    <button class="lvl-btn b-1" onclick="selectLevel(1)">Nivel 1 <span>🟢 Calma</span></button>
+                </div>
+            </div>
+
+            <div class="game-arena">
+                <div>
+                    <h2 id="statusTitle">Nivel 1: Calma Total</h2>
+                    <p id="statusDesc" style="color: var(--text-muted); font-size:0.9rem;">Equilibrio homeostático y corteza prefrontal en pleno control.</p>
+                </div>
+
+                <div class="level-img-box">
+                    <img id="levelImg" src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop" alt="Visual">
+                </div>
+
+                <div class="minigame-box" id="minigameBox"></div>
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<script>
+    // SISTEMA DE CONTROL DE VISTAS (OCULTAR / MOSTRAR)
+    let isGameVisible = false;
+
+    function showGameView() {
+        document.getElementById('theoryView').classList.remove('active');
+        document.getElementById('gameView').classList.add('active');
+        document.getElementById('toggleViewBtn').textContent = '📚 Volver a la Teoría';
+        isGameVisible = true;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showTheoryView() {
+        document.getElementById('gameView').classList.remove('active');
+        document.getElementById('theoryView').classList.add('active');
+        document.getElementById('toggleViewBtn').textContent = '🎮 Entrar al Juego';
+        isGameVisible = false;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleView() {
+        if (isGameVisible) {
+            showTheoryView();
+        } else {
+            showGameView();
+        }
+    }
+
+    // LÓGICA DEL JUEGO Y TIENDA DE XP
+    let currentXP = 0;
+    let equippedTheme = 'default';
+
+    const themes = [
+        { id: 'default', name: 'Oscuro Estándar', cost: 0, class: '', colors: ['#0f172a', '#1e293b', '#3b82f6'], unlocked: true },
+        { id: 'bosque', name: 'Bosque Esmeralda', cost: 25, class: 'theme-bosque', colors: ['#064e3b', '#047857', '#10b981'], unlocked: false },
+        { id: 'atardecer', name: 'Atardecer Púrpura', cost: 50, class: 'theme-atardecer', colors: ['#4c1d95', '#5b21b6', '#f43f5e'], unlocked: false },
+        { id: 'cyber', name: 'Cyberpunk Neón', cost: 80, class: 'theme-cyber', colors: ['#180828', '#2b0938', '#ff007f'], unlocked: false }
+    ];
+
+    function addXP(points) {
+        currentXP += points;
+        document.getElementById('xpDisplay').textContent = `${currentXP} XP`;
+        renderShop();
+    }
+
+    function renderShop() {
+        const grid = document.getElementById('shopGrid');
+        grid.innerHTML = '';
+
+        themes.forEach(theme => {
+            const card = document.createElement('div');
+            card.className = 'shop-card';
+
+            const isEquipped = equippedTheme === theme.id;
+            let buttonHTML = '';
+
+            if (isEquipped) {
+                buttonHTML = `<button class="btn-shop equipped" disabled>Equipado</button>`;
+            } else if (theme.unlocked) {
+                buttonHTML = `<button class="btn-shop" onclick="equipTheme('${theme.id}')">Usar Tema</button>`;
+            } else {
+                const canBuy = currentXP >= theme.cost;
+                buttonHTML = `<button class="btn-shop" ${canBuy ? '' : 'disabled'} onclick="buyTheme('${theme.id}')">Desbloquear (${theme.cost} XP)</button>`;
+            }
+
+            card.innerHTML = `
+                <h4 style="font-size:0.9rem;">${theme.name}</h4>
+                <div class="color-preview">
+                    <div style="background:${theme.colors[0]}"></div>
+                    <div style="background:${theme.colors[1]}"></div>
+                    <div style="background:${theme.colors[2]}"></div>
+                </div>
+                ${buttonHTML}
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function buyTheme(themeId) {
+        const theme = themes.find(t => t.id === themeId);
+        if (theme && currentXP >= theme.cost && !theme.unlocked) {
+            currentXP -= theme.cost;
+            theme.unlocked = true;
+            document.getElementById('xpDisplay').textContent = `${currentXP} XP`;
+            equipTheme(themeId);
+        }
+    }
+
+    function equipTheme(themeId) {
+        const theme = themes.find(t => t.id === themeId);
+        if (theme && theme.unlocked) {
+            document.body.className = theme.class;
+            equippedTheme = theme.id;
+            renderShop();
+        }
+    }
+
+    const levelData = {
+        1: {
+            title: "Nivel 1: Calma y Homeostasis",
+            color: "#10b981",
+            fill: "20%",
+            image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop",
+            desc: "Dominio del parasimpático. Excelente capacidad de reflexión.",
+            renderGame: () => `
+                <h4>🌬️ Minijuego: Respiración Diafragmática (+15 XP)</h4>
+                <p style="font-size:0.85rem; color:var(--text-muted);">Estimula el nervio vago ventral:</p>
+                <div class="breath-guide" id="breathCircle">Listo</div>
+                <button class="btn-shop" onclick="runBreathingCycle()">Iniciar Respiración</button>
+            `
+        },
+        2: {
+            title: "Nivel 2: Molestia Leve",
+            color: "#f59e0b",
+            fill: "40%",
+            image: "https://images.unsplash.com/photo-1541199249251-f713e6145474?w=800&auto=format&fit=crop",
+            desc: "Aparecen las primeras microtensiones musculares.",
+            renderGame: () => `
+                <h4>🧘 Minijuego: Grounding Sensorial 5-4-3 (+20 XP)</h4>
+                <label style="display:block; margin:6px 0;"><input type="checkbox" onchange="checkGrounding()"> Reconoce un objeto visual</label>
+                <label style="display:block; margin:6px 0;"><input type="checkbox" onchange="checkGrounding()"> Siente la textura de tu ropa o mesa</label>
+            `
+        },
+        3: {
+            title: "Nivel 3: Frustración / Ira Moderada",
+            color: "#f97316",
+            fill: "60%",
+            image: "https://images.unsplash.com/photo-1516302752625-fcc3c50ae61f?w=800&auto=format&fit=crop",
+            desc: "Eje HPA activado. Aumento de glucosa y ritmo cardíaco.",
+            renderGame: () => `
+                <h4>💬 Minijuego: Reestructuración Asertiva (+20 XP)</h4>
+                <button class="quiz-option" onclick="answerQuiz(false)">"¡Siempre echas a perder nuestras reuniones!"</button>
+                <button class="quiz-option" onclick="answerQuiz(true)">"Me siento frustrado cuando no se respeta la agenda, prefiero coordinar antes."</button>
+            `
+        },
+        4: {
+            title: "Nivel 4: Rabia Intensa",
+            color: "#ef4444",
+            fill: "80%",
+            image: "https://images.unsplash.com/photo-1509281373149-e957c6296406?w=800&auto=format&fit=crop",
+            desc: "Riesgo de Secuestro Amigdalino. Visión en túnel.",
+            renderGame: () => `
+                <h4>⏱️ Minijuego: Tiempo Fuera Fisiológico (+25 XP)</h4>
+                <div id="timerDisplay" style="font-size:1.6rem; font-weight:bold; color:#ef4444; margin:10px 0;">00:10</div>
+                <button class="btn-shop" style="background:#ef4444;" onclick="startTimer()">Iniciar Pausa de Emergencia</button>
+            `
+        },
+        5: {
+            title: "Nivel 5: Furia / Explosión",
+            color: "#a855f7",
+            fill: "100%",
+            image: "https://images.unsplash.com/photo-1525130413817-d45c1d127c42?w=800&auto=format&fit=crop",
+            desc: "Saturación simpática máxima. Impulso reactivo.",
+            renderGame: () => `
+                <h4>🥊 Minijuego: Descarga Motora (+25 XP)</h4>
+                <p style="font-size:0.8rem;">Haz clic para disipar la carga adrenalina muscular:</p>
+                <div class="tap-game-area" id="bubbleBox"></div>
+            `
+        }
+    };
+
+    function selectLevel(lvl) {
+        const data = levelData[lvl];
+
+        document.getElementById('thermoFill').style.height = data.fill;
+        document.getElementById('thermoFill').style.backgroundColor = data.color;
+
+        document.getElementById('statusTitle').textContent = data.title;
+        document.getElementById('statusDesc').textContent = data.desc;
+        document.getElementById('levelImg').src = data.image;
+
+        const arena = document.getElementById('minigameBox');
+        arena.innerHTML = data.renderGame();
+
+        if(lvl === 5) spawnBubbles();
+    }
+
+    function runBreathingCycle() {
+        const circle = document.getElementById('breathCircle');
+        if(!circle) return;
+        circle.textContent = "Inhala";
+        circle.className = "breath-guide breath-expand";
+
+        setTimeout(() => {
+            circle.textContent = "Exhala";
+            circle.className = "breath-guide";
+        }, 4000);
+
+        setTimeout(() => {
+            circle.textContent = "¡Completado!";
+            addXP(15);
+        }, 8000);
+    }
+
+    let checkedCount = 0;
+    function checkGrounding() {
+        checkedCount++;
+        if(checkedCount >= 2) {
+            alert("✨ ¡Atención redirigida al presente! +20 XP");
+            addXP(20);
+            checkedCount = 0;
+        }
+    }
+
+    function answerQuiz(isCorrect) {
+        if(isCorrect) {
+            alert("🎯 ¡Respuesta asertiva óptima! Desactiva la postura defensiva. +20 XP");
+            addXP(20);
+        } else {
+            alert("❌ Esta respuesta tiende a escalar la agresión.");
+        }
+    }
+
+    function startTimer() {
+        let seconds = 10;
+        const display = document.getElementById('timerDisplay');
+        const interval = setInterval(() => {
+            seconds--;
+            display.textContent = `00:0${seconds}`;
+            if(seconds <= 0) {
+                clearInterval(interval);
+                display.textContent = "¡Enfriamiento Logrado! +25 XP";
+                addXP(25);
+            }
+        }, 1000);
+    }
+
+    function spawnBubbles() {
+        const box = document.getElementById('bubbleBox');
+        if(!box) return;
+        box.innerHTML = '';
+        
+        for(let i = 0; i < 4; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'stress-bubble';
+            bubble.textContent = '💥';
+            bubble.style.top = Math.random() * 80 + 'px';
+            bubble.style.left = Math.random() * 80 + '%';
+            
+            bubble.onclick = function() {
+                this.remove();
+                addXP(6);
+                if(box.children.length === 0) {
+                    box.innerHTML = '<p style="text-align:center; padding-top:50px; color:#34d399;">¡Energía liberada con éxito! +25 XP</p>';
+                }
+            };
+            box.appendChild(bubble);
+        }
+    }
+
+    // Inicialización
+    renderShop();
+    selectLevel(1);
+</script>
+
+</body>
+</html>
